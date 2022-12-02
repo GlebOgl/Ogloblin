@@ -190,7 +190,7 @@ currency_to_rub = {
     "USD": 60.66,
     "UZS": 0.0055,
 }
-output_type = input("Какой 111111 требуется(Вакансии/Статистика: ")
+output_type = input("Какой 1111111 требуется(Вакансии/Статистика: ")
 name = input('Введите название файла: ')
 prof = input('Введите название профессии: ')
 header, vac = csv_reader(name)
