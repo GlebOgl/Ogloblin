@@ -6,7 +6,17 @@ from openpyxl.styles import Border, Side, Font
 import matplotlib.pyplot as plt
 import numpy as np
 import doctest
+import unittest
 
+
+class ReportTests(unittest.TestCase):
+    def test_ws_name(self):
+        self.assertEqual(Report().file.active.title, "Статистика по годам")
+    def test_type(self):
+        self.assertEqual(type(Report()).__name__, "Report")
+
+    def test_file_type(self):
+        self.assertEqual(type(Report().file).__name__, "Workbook")
 
 class Report:
     """Класс для представления отчета
@@ -111,6 +121,8 @@ def clean_string(string):
         string(str): строка
     Returns:
         str: строка без спецсимволов
+    >>> clean_string('<asd>abc')
+    'abc'
     """
     return ' '.join(re.sub(r"<[^>]+>", '', string).split())
 
@@ -122,6 +134,8 @@ def csv_reader(name):
         name(str): название файла
     Returns:
         list, list: списсок заголовков файла, список строк файла
+    >>> csv_reader('vacancies_test.csv')
+    (['name', 'salary_from', 'salary_to', 'salary_currency', 'area_name', 'published_at'], [['IT аналитик', '35000.0', '45000.0', 'RUR', 'Санкт-Петербург', '2007-12-03T17:34:36+0300']])
     """
     csv_list = csv.reader(open(name, encoding='utf-8-sig'))
     data = [x for x in csv_list]
@@ -131,11 +145,13 @@ def csv_reader(name):
 def csv_filer(reader):
     """очищает каждую строку файла от спец символов
 
-        Args:
-            reader(list): список строк файла
-        Returns:
-            list: очищенный список строк файла
-        """
+    Args:
+        reader(list): список строк файла
+    Returns:
+        list: очищенный список строк файла
+    >>> csv_filer([['gog<dad>', '<asd>abc'],['','<ada>']])
+    [['gog', 'abc']]
+    """
     all_vac = [x for x in reader if '' not in x and len(x) == len(reader[0])]
     vac = [[clean_string(y) for y in x] for x in all_vac]
     return vac
@@ -148,6 +164,7 @@ def set_graf1(salaries, prof_salaries, prof):
             salaries({str: int}): словарь средней зарплаты среди всех профессии по годам
             prof_salaries({str: int}): словарь средней зарплаты для определенной профессии по годам
             prof(str): название профессии
+    //>>> set_graf1({2007: 100, 2008: 200, 2009: 300}, {2007: 500, 2008: 100, 2009: 200}, 'Pro')
     """
     x_axis = np.arange(len(salaries))
     years = []
@@ -234,84 +251,84 @@ currency_to_rub = {
     "USD": 60.66,
     "UZS": 0.0055,
 }
-
-
-output_type = input("Какой вывод требуется(Вакансии/Статистика: ")
-name = input('Введите название файла: ')
-prof = input('Введите название профессии: ')
-header, vac = csv_reader(name)
-vac = csv_filer(vac)
-dict_naming = {}
-for i in range(len(header)):
-    dict_naming[header[i]] = i
-salary_dynamic = {}
-count_dynamic = {}
-salary_prof_dynamic = {}
-city_count = {}
-salary_city = {}
-prof_count = {}
-for item in vac:
-    year = int(item[dict_naming['published_at']].split('-')[0])
-    if year not in count_dynamic:
-        count_dynamic[year] = 0
-    count_dynamic[year] += 1
-    for i in range(len(item)):
-        if header[i] == 'salary_from':
-            salary = (float(item[i]) + float(item[i + 1])) / 2
-            if item[dict_naming['salary_currency']] != 'RUR':
-                salary *= currency_to_rub[item[dict_naming['salary_currency']]]
-            if year not in salary_dynamic:
-                salary_dynamic[year] = []
-            salary_dynamic[year].append(int(salary))
-            if year not in salary_prof_dynamic:
-                salary_prof_dynamic[year] = []
-            if prof in item[0]: salary_prof_dynamic[year].append(int(salary))
-            if year not in prof_count:
-                prof_count[year] = 0
-            if prof in item[0]: prof_count[year] += 1
-        city = item[dict_naming['area_name']]
-        if city not in city_count:
-            city_count[city] = 0
-        city_count[city] += 1
-for item in vac:
-    for i in range(len(item)):
-        if header[i] == 'salary_from':
-            salary = (float(item[i]) + float(item[i + 1])) / 2
-            city = item[dict_naming['area_name']]
-            if item[dict_naming['salary_currency']] != 'RUR':
-                salary *= currency_to_rub[item[dict_naming['salary_currency']]]
-            if city_count[city] >= int(sum(city_count.values()) * 0.01):
-                if city not in salary_city:
-                    salary_city[city] = []
-                salary_city[city].append(int(salary))
-for key in salary_dynamic:
-    salary_dynamic[key] = sum(salary_dynamic[key]) // len(salary_dynamic[key])
-for key in salary_prof_dynamic:
-    salary_prof_dynamic[key] = sum(salary_prof_dynamic[key]) // max(len(salary_prof_dynamic[key]), 1)
-for key in salary_city:
-    salary_city[key] = sum(salary_city[key]) // len(salary_city[key])
-print('Динамика уровня зарплат по годам:', salary_dynamic)
-print('Динамика количества вакансий по годам:', count_dynamic)
-print('Динамика уровня зарплат по годам для выбранной профессии:', salary_prof_dynamic)
-print('Динамика количества вакансий по годам для выбранной профессии:', prof_count)
-print('Уровень зарплат по городам (в порядке убывания):', dict(Counter(salary_city).most_common(10)))
-most = dict(
-    Counter({k: float('{:.4f}'.format(v / sum(city_count.values()))) for k, v in city_count.items()}).most_common(10))
-most = {k: v for k, v in most.items() if v >= 0.01}
-print('Доля вакансий по городам (в порядке убывания):', most)
-
-if output_type == "Вакансии":
-    report = Report()
-    report.generate_excel([salary_dynamic, salary_prof_dynamic, count_dynamic, prof_count], [salary_city, most])
-else:
-    figure, axs = plt.subplots(nrows=2, ncols=2, figsize=(10, 10), dpi=100)
-    graf1 = axs[0, 0]
-    graf2 = axs[0, 1]
-    graf3 = axs[1, 0]
-    graf4 = axs[1, 1]
-    set_graf1(salary_dynamic, salary_prof_dynamic, prof)
-    set_graf2(count_dynamic, prof_count, prof)
-    set_graf3(dict(Counter(salary_city).most_common(10)))
-    set_graf4(most)
-    plt.tight_layout()
-    plt.savefig("graph.png")
+if __name__ == "__main__":
+  unittest.main()
+# output_type = input("Какой вывод требуется(Вакансии/Статистика: ")
+# name = input('Введите название файла: ')
+# prof = input('Введите название профессии: ')
+# header, vac = csv_reader(name)
+# vac = csv_filer(vac)
+# dict_naming = {}
+# for i in range(len(header)):
+#     dict_naming[header[i]] = i
+# salary_dynamic = {}
+# count_dynamic = {}
+# salary_prof_dynamic = {}
+# city_count = {}
+# salary_city = {}
+# prof_count = {}
+# for item in vac:
+#     year = int(item[dict_naming['published_at']].split('-')[0])
+#     if year not in count_dynamic:
+#         count_dynamic[year] = 0
+#     count_dynamic[year] += 1
+#     for i in range(len(item)):
+#         if header[i] == 'salary_from':
+#             salary = (float(item[i]) + float(item[i + 1])) / 2
+#             if item[dict_naming['salary_currency']] != 'RUR':
+#                 salary *= currency_to_rub[item[dict_naming['salary_currency']]]
+#             if year not in salary_dynamic:
+#                 salary_dynamic[year] = []
+#             salary_dynamic[year].append(int(salary))
+#             if year not in salary_prof_dynamic:
+#                 salary_prof_dynamic[year] = []
+#             if prof in item[0]: salary_prof_dynamic[year].append(int(salary))
+#             if year not in prof_count:
+#                 prof_count[year] = 0
+#             if prof in item[0]: prof_count[year] += 1
+#         city = item[dict_naming['area_name']]
+#         if city not in city_count:
+#             city_count[city] = 0
+#         city_count[city] += 1
+# for item in vac:
+#     for i in range(len(item)):
+#         if header[i] == 'salary_from':
+#             salary = (float(item[i]) + float(item[i + 1])) / 2
+#             city = item[dict_naming['area_name']]
+#             if item[dict_naming['salary_currency']] != 'RUR':
+#                 salary *= currency_to_rub[item[dict_naming['salary_currency']]]
+#             if city_count[city] >= int(sum(city_count.values()) * 0.01):
+#                 if city not in salary_city:
+#                     salary_city[city] = []
+#                 salary_city[city].append(int(salary))
+# for key in salary_dynamic:
+#     salary_dynamic[key] = sum(salary_dynamic[key]) // len(salary_dynamic[key])
+# for key in salary_prof_dynamic:
+#     salary_prof_dynamic[key] = sum(salary_prof_dynamic[key]) // max(len(salary_prof_dynamic[key]), 1)
+# for key in salary_city:
+#     salary_city[key] = sum(salary_city[key]) // len(salary_city[key])
+# print('Динамика уровня зарплат по годам:', salary_dynamic)
+# print('Динамика количества вакансий по годам:', count_dynamic)
+# print('Динамика уровня зарплат по годам для выбранной профессии:', salary_prof_dynamic)
+# print('Динамика количества вакансий по годам для выбранной профессии:', prof_count)
+# print('Уровень зарплат по городам (в порядке убывания):', dict(Counter(salary_city).most_common(10)))
+# most = dict(
+#     Counter({k: float('{:.4f}'.format(v / sum(city_count.values()))) for k, v in city_count.items()}).most_common(10))
+# most = {k: v for k, v in most.items() if v >= 0.01}
+# print('Доля вакансий по городам (в порядке убывания):', most)
+#
+# if output_type == "Вакансии":
+#     report = Report()
+#     report.generate_excel([salary_dynamic, salary_prof_dynamic, count_dynamic, prof_count], [salary_city, most])
+# else:
+#     figure, axs = plt.subplots(nrows=2, ncols=2, figsize=(10, 10), dpi=100)
+#     graf1 = axs[0, 0]
+#     graf2 = axs[0, 1]
+#     graf3 = axs[1, 0]
+#     graf4 = axs[1, 1]
+#     set_graf1(salary_dynamic, salary_prof_dynamic, prof)
+#     set_graf2(count_dynamic, prof_count, prof)
+#     set_graf3(dict(Counter(salary_city).most_common(10)))
+#     set_graf4(most)
+#     plt.tight_layout()
+#     plt.savefig("graph.png")
