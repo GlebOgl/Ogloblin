@@ -5,10 +5,19 @@ import openpyxl
 from openpyxl.styles import Border, Side, Font
 import matplotlib.pyplot as plt
 import numpy as np
+import doctest
 
 
-class report:
+class Report:
+    """Класс для представления отчета
+
+    Attributes:
+        file (Workbook): контейнер для всех остальных частей XLSX-документа
+    """
     def __init__(self):
+        """Инициализирует объект Report, создает страницу в таблице exel под именем 'Статистика по годам'
+
+        """
         self.file = openpyxl.Workbook()
 
         ws = self.file.active
@@ -16,6 +25,13 @@ class report:
         self.file.create_sheet("Статистика по городам")
 
     def generate_excel(self, list_years, list_city):
+        """Заполняет страницу 'Статистика по годам' exel таблицы переданной информацией начиная с 2007 года,
+         создает и заполняет страницу "Статистика по городам" переданными данными
+
+        Args:
+            list_years([{str: int}]): список словарей содержащих статистику по годам
+            list_city([{str: int}]): список словарей содержащих статистику по городам
+        """
         ws = self.file["Статистика по годам"]
         ws.append(["Год", "Средняя зарплата", f"Средняя зарплата - {prof}", "Количество вакансий" , f"Количество вакансий - {prof}"])
         ws2 = self.file["Статистика по городам"]
@@ -88,40 +104,51 @@ class report:
         self.file.save('report.xlsx')
 
 
-def to_string(ws):
-    result = ""
-    result += "<table>\n"
-
-    for row in ws.rows:
-        result += "<tr>"
-        for value in row:
-            if value.value == None:
-                result += "<th style=\"border: 0;\"></th>"
-                continue
-            result += f"<th>{value.value}</th>"
-        result += "</tr>"
-
-    result += "</table>"
-    return result
-
-
 def clean_string(string):
+    """очищает строку от спец символов
+
+    Args:
+        string(str): строка
+    Returns:
+        str: строка без спецсимволов
+    """
     return ' '.join(re.sub(r"<[^>]+>", '', string).split())
 
 
 def csv_reader(name):
+    """очищает строку от спец символов
+
+    Args:
+        name(str): название файла
+    Returns:
+        list, list: списсок заголовков файла, список строк файла
+    """
     csv_list = csv.reader(open(name, encoding='utf-8-sig'))
     data = [x for x in csv_list]
     return data[0], data[1::]
 
 
 def csv_filer(reader):
+    """очищает каждую строку файла от спец символов
+
+        Args:
+            reader(list): список строк файла
+        Returns:
+            list: очищенный список строк файла
+        """
     all_vac = [x for x in reader if '' not in x and len(x) == len(reader[0])]
     vac = [[clean_string(y) for y in x] for x in all_vac]
     return vac
 
 
 def set_graf1(salaries, prof_salaries, prof):
+    """заполняет гистограмму уровня зарплат по годам
+
+        Args:
+            salaries({str: int}): словарь средней зарплаты среди всех профессии по годам
+            prof_salaries({str: int}): словарь средней зарплаты для определенной профессии по годам
+            prof(str): название профессии
+    """
     x_axis = np.arange(len(salaries))
     years = []
     arr = []
@@ -138,6 +165,13 @@ def set_graf1(salaries, prof_salaries, prof):
 
 
 def set_graf2(vacancies, prof_vacancies, prof):
+    """заполняет гистограмму количества вакансий по годам
+
+            Args:
+                vacancies({str: int}): словарь среднго количества вакансий среди всех профессии по годам
+                prof_vacancies({str: int}): словарь среднго количества вакансий для определенной профессии по годам
+                prof(str): название профессии
+        """
     x_axis = np.arange(len(vacancies))
     years = []
     arr = []
@@ -154,6 +188,11 @@ def set_graf2(vacancies, prof_vacancies, prof):
 
 
 def set_graf3(salaries):
+    """заполняет линейчатую диаграмму уровня зарплат по городам по убыванию
+
+         Args:
+             salaries({str: int}): словарь средней зарплаты по городам(10 самых высоких средних зарплат)
+    """
     arr = []
     labels = []
     for key in salaries:
@@ -165,6 +204,11 @@ def set_graf3(salaries):
 
 
 def set_graf4(most):
+    """заполняет круговую диаграмму количества вакансий по городам(10 самых высоких + все остальные)
+
+        Args:
+            most({str: int}): словарь количества вакансий по городам
+    """
     arr = []
     labels = []
     s = 0
@@ -193,13 +237,6 @@ currency_to_rub = {
 
 
 output_type = input("Какой вывод требуется(Вакансии/Статистика: ")
-
-||||||| b842c29
-output_type = input("Какой вывод требуется(Вакансии/Статистика: ")
-=======
-
-output_type = input("Какой вывод требуется(Вакансии/Статистика: ")
->>>>>>> 0fd98d470baf6273db7e59cd8b9cf01c68d34962
 name = input('Введите название файла: ')
 prof = input('Введите название профессии: ')
 header, vac = csv_reader(name)
@@ -264,7 +301,7 @@ most = {k: v for k, v in most.items() if v >= 0.01}
 print('Доля вакансий по городам (в порядке убывания):', most)
 
 if output_type == "Вакансии":
-    report = report()
+    report = Report()
     report.generate_excel([salary_dynamic, salary_prof_dynamic, count_dynamic, prof_count], [salary_city, most])
 else:
     figure, axs = plt.subplots(nrows=2, ncols=2, figsize=(10, 10), dpi=100)
