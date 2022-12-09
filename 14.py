@@ -116,7 +116,7 @@ def clean_string(string):
 
 
 def csv_reader(name):
-    """очищает строку от спец символов
+    """считывает данные из файла csv
 
     Args:
         name(str): название файла
