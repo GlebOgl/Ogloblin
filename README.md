@@ -4,9 +4,9 @@
 
 -Задокументировал часть кода чтобы тесты не занимали много времени
 -Доктесты
--![image](https://user-images.githubusercontent.com/79518116/209444368-606ce0a7-da4e-4e63-8a16-16366c0b5d4f.png)
+-![image](https://user-images.githubusercontent.com/79518116/209444636-49d05ced-02de-4a11-824f-0fa0203d1d95.png)
 -![image](https://user-images.githubusercontent.com/79518116/209444384-49513fae-9f3d-47c8-93dc-4322bebd2ae7.png)
--![image](https://user-images.githubusercontent.com/79518116/209444390-3012bbb3-32af-4901-9082-1027a0c7c76e.png)
+-![image](https://user-images.githubusercontent.com/79518116/209444649-a41ad324-3bbb-4ffe-8cff-3e6f2d4fb4a9.png)
 -тесты пройдены
 -![image](https://user-images.githubusercontent.com/79518116/209444618-1d0df60a-21d7-4c7f-b969-bd2bc509a0f0.png)
 -Модульные тесты
