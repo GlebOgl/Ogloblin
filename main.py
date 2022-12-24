@@ -123,6 +123,10 @@ def clean_string(string):
         str: строка без спецсимволов
     >>> clean_string('<asd>abc')
     'abc'
+    >>> clean_string('')
+    ''
+    >>> clean_string('<asd>')
+    ''
     """
     return ' '.join(re.sub(r"<[^>]+>", '', string).split())
 
@@ -150,6 +154,10 @@ def csv_filer(reader):
     Returns:
         list: очищенный список строк файла
     >>> csv_filer([['gog<dad>', '<asd>abc'],['','<ada>']])
+    [['gog', 'abc']]
+    >>> csv_filer([])
+    []
+    >>> csv_filer([['gog<dad>', '<asd>abc']])
     [['gog', 'abc']]
     """
     all_vac = [x for x in reader if '' not in x and len(x) == len(reader[0])]
