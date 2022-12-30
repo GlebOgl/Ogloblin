@@ -2,6 +2,8 @@ import pandas as pd
 from multiprocessing import Queue, Process
 from pathlib import Path
 import math
+import split
+import pdf
 
 
 def get_salary(x, currencies):
@@ -39,8 +41,10 @@ def read_csv_year(args, q):
 
 
 if __name__ == '__main__':
-    folder = input('Введите название папки с файлами: ')
+    file_name = input('Введите название файла: ')
     prof = input('Введите название профессии: ')
+    folder = 'vacancies'
+    split.main(file_name)
     salary_dynamic = {}
     count_dynamic = {}
     salary_prof_dynamic = {}
@@ -76,6 +80,4 @@ if __name__ == '__main__':
     print('Динамика уровня зарплат по годам для выбранной профессии:', salary_prof_dynamic)
     print('Динамика количества вакансий по годам для выбранной профессии:', prof_count)
 
-    new_df = pd.concat(dfs)
-
-    new_df.to_csv('vac_with_sal.csv', index=False)
+    pdf.main(prof, [salary_dynamic, count_dynamic, salary_prof_dynamic, prof_count])
